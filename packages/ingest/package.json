@@ -1,0 +1,23 @@
+{
+  "name": "@hsb/ingest",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Command-line jobs that fetch music data and load it into the database.",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "@hsb/eslint-config": "workspace:*",
+    "@hsb/tsconfig": "workspace:*",
+    "@types/node": "^22.20.5",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@hsb/types": "workspace:*"
+  }
+}

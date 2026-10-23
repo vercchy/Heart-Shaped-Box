@@ -1,0 +1,30 @@
+{
+  "name": "@hsb/types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Types and small helpers shared by the API, the web app and the ingester.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@hsb/eslint-config": "workspace:*",
+    "@hsb/tsconfig": "workspace:*",
+    "@types/node": "^22.20.5",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3"
+  }
+}
