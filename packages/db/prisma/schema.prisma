@@ -1,0 +1,144 @@
+// Database schema for Heart-Shaped Box.
+// Model and field names are camelCase in TypeScript; @@map / @map give the
+// tables and columns snake_case names in Postgres.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// MusicBrainz "primary type" of a release group.
+enum ReleaseType {
+  ALBUM
+  EP
+  SINGLE
+  BROADCAST
+  OTHER
+}
+
+/// Where a popularity number came from.
+enum PopularitySourceName {
+  LASTFM
+  LISTENBRAINZ
+  DISCOGS
+  DEEZER
+}
+
+/// A musician or band.
+model Artist {
+  id        Int      @id @default(autoincrement())
+  /// MusicBrainz artist ID.
+  mbid      String   @unique @db.Uuid
+  name      String
+  /// Name used for sorting, e.g. "Beatles, The".
+  sortName  String?  @map("sort_name")
+  slug      String   @unique
+  imageUrl  String?  @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  releaseGroups ReleaseGroupArtist[]
+
+  @@map("artist")
+}
+
+/// An album, EP or single as a work, independent of any specific pressing or edition.
+model ReleaseGroup {
+  id               Int         @id @default(autoincrement())
+  /// MusicBrainz release-group ID.
+  mbid             String      @unique @db.Uuid
+  title            String
+  slug             String      @unique
+  primaryType      ReleaseType @map("primary_type")
+  /// MusicBrainz secondary types, e.g. ["Compilation", "Live"].
+  secondaryTypes   String[]    @default([]) @map("secondary_types")
+  /// As MusicBrainz gives it; can be partial: "1994", "1994-09" or "1994-09-13".
+  firstReleaseDate String?     @map("first_release_date") @db.VarChar(10)
+  year             Int?
+  /// First year of the decade, e.g. 1990 for the 1990s.
+  decade           Int?
+  coverUrl         String?     @map("cover_url")
+  discogsMasterId  Int?        @unique @map("discogs_master_id")
+  /// Blended popularity used for every "most popular" list.
+  popularityScore  Float       @default(0) @map("popularity_score")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  artists    ReleaseGroupArtist[]
+  genres     ReleaseGroupGenre[]
+  popularity PopularitySource[]
+
+  @@index([decade, popularityScore(sort: Desc)])
+  @@index([year, popularityScore(sort: Desc)])
+  @@index([popularityScore(sort: Desc)])
+  @@map("release_group")
+}
+
+/// Which artists are credited on a release group, in credit order.
+model ReleaseGroupArtist {
+  releaseGroupId Int     @map("release_group_id")
+  artistId       Int     @map("artist_id")
+  /// 0 for the first credited artist.
+  position       Int
+  /// Text after this artist in the credit, e.g. " & " or " feat. ".
+  joinPhrase     String? @map("join_phrase")
+
+  releaseGroup ReleaseGroup @relation(fields: [releaseGroupId], references: [id], onDelete: Cascade)
+  artist       Artist       @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@id([releaseGroupId, artistId])
+  @@index([artistId])
+  @@map("release_group_artist")
+}
+
+/// A genre (e.g. "Electronic") or, when parentId is set, a style within it (e.g. "Acid House").
+model Genre {
+  id       Int     @id @default(autoincrement())
+  name     String
+  slug     String  @unique
+  parentId Int?    @map("parent_id")
+
+  parent        Genre?              @relation("GenreHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children      Genre[]             @relation("GenreHierarchy")
+  releaseGroups ReleaseGroupGenre[]
+
+  @@unique([parentId, name])
+  @@index([parentId])
+  @@map("genre")
+}
+
+/// Which genres a release group belongs to.
+model ReleaseGroupGenre {
+  releaseGroupId Int   @map("release_group_id")
+  genreId        Int   @map("genre_id")
+  /// How strongly the genre applies, 0 to 1 (e.g. from vote counts).
+  weight         Float @default(1)
+
+  releaseGroup ReleaseGroup @relation(fields: [releaseGroupId], references: [id], onDelete: Cascade)
+  genre        Genre        @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([releaseGroupId, genreId])
+  @@index([genreId])
+  @@map("release_group_genre")
+}
+
+/// Raw popularity numbers from one source; popularityScore is computed from these.
+model PopularitySource {
+  releaseGroupId Int                  @map("release_group_id")
+  source         PopularitySourceName
+  /// Distinct listeners (Last.fm, ListenBrainz) or owners (Discogs "have").
+  listeners      Int?
+  /// Total plays; BigInt because Last.fm play counts can pass 2 billion.
+  plays          BigInt?
+  fetchedAt      DateTime             @default(now()) @map("fetched_at")
+
+  releaseGroup ReleaseGroup @relation(fields: [releaseGroupId], references: [id], onDelete: Cascade)
+
+  @@id([releaseGroupId, source])
+  @@map("popularity_source")
+}

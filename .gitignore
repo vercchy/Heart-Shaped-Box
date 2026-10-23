@@ -17,6 +17,9 @@ coverage/
 .env.*
 !.env.example
 
+# Editor settings (JetBrains)
+.idea/
+
 # Logs and OS files
 *.log
 .DS_Store

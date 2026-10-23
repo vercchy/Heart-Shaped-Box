@@ -5,5 +5,7 @@ packages:
 # pnpm 10 blocks dependency install scripts unless they are allowed here.
 onlyBuiltDependencies:
   - '@nestjs/core'
+  - '@prisma/engines'
+  - prisma
   - sharp
   - unrs-resolver

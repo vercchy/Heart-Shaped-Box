@@ -30,4 +30,21 @@ packages/
 
 Run a command in one package only with `--filter`, e.g. `pnpm --filter @hsb/api dev`.
 
-Requires Node 22+ and pnpm 10.
+Requires Node 22+, pnpm 10 and Docker Desktop.
+
+## Database
+
+Postgres runs in Docker on host port **5433**; the schema lives in `packages/db/prisma/schema.prisma`.
+
+First-time setup:
+
+1. Copy `.env.example` to `.env` at the repo root.
+2. `pnpm db:up` to start Postgres.
+3. `pnpm db:migrate` to create the tables.
+
+| Command                       | What it does                                                 |
+| ----------------------------- | ------------------------------------------------------------ |
+| `pnpm db:up` / `pnpm db:down` | Start / stop the Postgres container (data is kept)           |
+| `pnpm db:migrate`             | Apply migrations; after a schema edit, add `--name <change>` |
+| `pnpm db:generate`            | Regenerate the TypeScript client after editing the schema    |
+| `pnpm db:studio`              | Open Prisma Studio, a browser UI for looking at the tables   |

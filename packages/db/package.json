@@ -2,7 +2,7 @@
   "name": "@hsb/db",
   "version": "0.0.0",
   "private": true,
-  "description": "Database schema and client (Prisma arrives in Step 2).",
+  "description": "Prisma schema, migrations and the shared database client.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -15,16 +15,26 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch --preserveWatchOutput",
+    "generate": "prisma generate",
+    "build": "prisma generate && tsc",
+    "dev": "prisma generate && tsc --watch --preserveWatchOutput",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "prisma generate && tsc --noEmit",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "studio": "prisma studio"
   },
   "devDependencies": {
     "@hsb/eslint-config": "workspace:*",
     "@hsb/tsconfig": "workspace:*",
     "@types/node": "^22.20.5",
+    "dotenv": "^17.4.2",
     "eslint": "^9.39.5",
+    "prisma": "^7.10.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1"
   }
 }
